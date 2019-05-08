@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">JoeyClient</string>
+    <string name="joey_detected">JoeyJoebags v3 detected</string>
+    <string name="no_device_detected">No supported device detected</string>
+</resources>
