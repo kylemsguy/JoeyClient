@@ -1,4 +1,4 @@
-package com.example.joeyclient
+package com.kylemsguy.joeyclient
 
 import android.hardware.usb.UsbDevice
 import android.support.v7.app.AppCompatActivity

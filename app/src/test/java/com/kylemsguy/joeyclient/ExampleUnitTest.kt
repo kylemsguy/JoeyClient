@@ -1,4 +1,4 @@
-package com.example.joeyclient
+package com.kylemsguy.joeyclient
 
 import org.junit.Test
 
