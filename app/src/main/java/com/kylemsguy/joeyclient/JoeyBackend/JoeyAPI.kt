@@ -35,6 +35,14 @@ class JoeyAPI(private val iface: UsbInterface, private val conn: UsbDeviceConnec
         return dumpRAM(header, bankSize)
     }
 
+    fun MBCBurnRAM(){
+        val bankSize: int = 16384
+        val header = readCartHeader()
+        write(byteArrayOf(0x0A,0x00,0x01,0x60,0x00,0x01))
+        read(64)
+
+    }
+
     fun readCartHeader(): CartHeader{
         setBank(0, 0)
         ROMBankSwitch(0)
@@ -91,7 +99,7 @@ class JoeyAPI(private val iface: UsbInterface, private val conn: UsbDeviceConnec
         read(64)
     }
 
-    fun dumpRAM(header: CartHeader, banksize: int){
+    fun dumpRAM(header: CartHeader, bankSize: int){
         val ramBuffer = ArrayList<Byte>()
         val numBanks: int = header.RAMSize / 8192
 
@@ -99,7 +107,7 @@ class JoeyAPI(private val iface: UsbInterface, private val conn: UsbDeviceConnec
         for(bankNumber in 0..numBanks){
             var ramAddress = 0xA000
             RAMBankSwitch(bankNumber)
-            val numPackets = 8192/64
+            val numPackets = 8192 / 64
             for(packetNumber in 0..numPackets){
                 val addHi = RAMaddress shr 8
                 val addLo = RAMaddress and 0xFF
@@ -110,5 +118,24 @@ class JoeyAPI(private val iface: UsbInterface, private val conn: UsbDeviceConnec
             }
         }
         return ramBuffer.toByteArray()
+    }
+
+    fun burnRAM(ramData: byteArray, bankSize: int){
+        // note: seems bankSize does nothing and all bank sizes are hardcoaded to 8192????
+        val numBanks = RAMsize / 8192
+        var rPos = 0
+
+        for (bankNumber: 0..numBanks):
+            var ramAddress = 0xA000
+            RAMBankSwitch(bankNumber)
+            for(packetNumber in 0..128):
+                val AddHi = ramAddress shr 8
+                val AddLo = ramAddress and 0xFF
+                write(byteArrayOf(0x12,0x00,0x00,AddHi,AddLo))
+                read(64)
+                write(ramData.slice(rPos, rPos+64))
+                read(64)
+                ramAddress += 64
+                Rpos += 64
     }
 }
