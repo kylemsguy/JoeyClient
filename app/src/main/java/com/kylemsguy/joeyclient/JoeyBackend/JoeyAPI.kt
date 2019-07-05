@@ -1,4 +1,4 @@
-package com.kylemsguy.joeyclient.JoeyBackend
+package com.kylemsguy.joeyclient.joeybackend
 
 import android.hardware.usb.UsbDeviceConnection
 import android.hardware.usb.UsbEndpoint
@@ -14,19 +14,19 @@ class JoeyAPI(private val iface: UsbInterface, private val conn: UsbDeviceConnec
     val RAMTypes = intArrayOf(0,2048,8192,32768,(32768*4),(32768*2))
 
     /* PyUSB-like helpers */
-    fun read(size: int){
+    fun read(size: Int): ByteArray {
         val result = ByteArray(size)
-        conn.bulkTransfer(readEndpoint, result, result.length, 0)
+        conn.bulkTransfer(readEndpoint, result, result.size, 0)
         return result
     }
 
-    fun write(cmd){
-        conn.bulkTransfer(writeEndpoint, cmd, cmd.length, 0)
+    fun write(cmd: ByteArray){
+        conn.bulkTransfer(writeEndpoint, cmd, cmd.size, 0)
     }
 
     /* Ported functions from JoeyJoebags v3.36Beta */
-    fun MBCDumpRAM(){
-        val bankSize: int = 16384
+    fun MBCDumpRAM(): ByteArray{
+        val bankSize = 16384
         val header = readCartHeader()
 
         //conn.claimInterface(iface, true)
@@ -35,12 +35,12 @@ class JoeyAPI(private val iface: UsbInterface, private val conn: UsbDeviceConnec
         return dumpRAM(header, bankSize)
     }
 
-    fun MBCBurnRAM(){
-        val bankSize: int = 16384
+    fun MBCBurnRAM(sram: ByteArray) {
+        val bankSize = 16384
         val header = readCartHeader()
         write(byteArrayOf(0x0A,0x00,0x01,0x60,0x00,0x01))
         read(64)
-
+        burnRAM(header, sram, bankSize)
     }
 
     fun readCartHeader(): CartHeader{
@@ -50,16 +50,19 @@ class JoeyAPI(private val iface: UsbInterface, private val conn: UsbDeviceConnec
         val header = ArrayList<Byte>()
 
         write(byteArrayOf(0x10,0x00,0x00,0x01,0x00))
-        dat = read(64)
-        header.addAll(dat)
+        read(64).let { dat ->
+            header.addAll(dat.toList())
+        }
 
         write(byteArrayOf(0x10,0x00,0x00,0x01,0x40))
-        dat = read(64)
-        header.addAll(dat)
+        read(64).let { dat ->
+            header.addAll(dat.toList())
+        }
 
-        write(byteArrayOf(0x10,0x00,0x00,0x01,0x80))
-        dat = read(64)
-        header.addAll(dat)
+        write(byteArrayOf(0x10, 0x00, 0x00, 0x01, 0x80.toByte()))
+        val dat = read(64).let { dat ->
+            header.addAll(dat.toList())
+        }
 
         val ROMSize = 32768 * Math.pow(2.toDouble(), header[0x48].toDouble()).toInt()
         val RAMSize = RAMTypes[header[0x49].toInt()]
@@ -68,40 +71,41 @@ class JoeyAPI(private val iface: UsbInterface, private val conn: UsbDeviceConnec
         return CartHeader(ROMSize, RAMSize, ROMTitle, header.toByteArray())
     }
 
-    fun setBank(blk: byte, sublk: byte): ByteArray {
+    fun setBank(blk: Byte, sublk: Byte): ByteArray {
         // TODO: Figure out what this actually does
         val sublk = sublk * 64
-        val cmd = byteArrayOf(0x0A,0x00,0x03,0x70,0x00,sublk,0x70,0x01,0xE0,0x70,0x02,blk)
+        val cmd = byteArrayOf(0x0A, 0x00, 0x03, 0x70, 0x00, sublk.toByte(), 0x70, 0x01, 0xE0.toByte(), 0x70, 0x02, blk)
 //    print (hex(blk),hex(sublk))
 
-        write(writeEndpoint, cmd, cmd.length, 0) // Lock flash block(?)
+        write(cmd) // Lock flash block(?)
         return read(64)
     }
 
-    fun ROMBankSwitch(bankNumber: byte){
+    fun ROMBankSwitch(bankNumber: Int){
         // Convert 16bit bank number to 2 x 8bit numbers
         // Write to address defined under MBC settings to swap banks. This will change depending on certain cart types...
-        val bhi = bankNumber shr 8
-        val blo = bankNumber and 0xFF
+        val bhi = (bankNumber shr 8).toByte()
+        val blo = (bankNumber and 0xFF).toByte()
 
         write(byteArrayOf(0x0A,0x00,0x01,0x30,0x00,bhi))
         read(64) // Do I even need to store this???
         write(byteArrayOf(0x0A,0x00,0x01,0x21,0x00,blo))
-        dev.read(64)
-    }
-
-    fun RAMBankSwitch(bankNumber: byte){
-        //print ("Bank:"+str(bankNumber))
-        // Convert 16bit bank number to 2 x 8bit numbers
-        // Write to address defined under MBC settings to swap banks. This will change depending on certain cart types...
-        val blo = bankNumber and 0xFF
-        write(byteArrayOf(0x0A,0x00,0x01,0x40,0x00,blo))
         read(64)
     }
 
-    fun dumpRAM(header: CartHeader, bankSize: int){
+    fun RAMBankSwitch(bankNumber: Int){
+        //print ("Bank:"+str(bankNumber))
+        // Convert 16bit bank number to 2 x 8bit numbers
+        // Write to address defined under MBC settings to swap banks. This will change depending on certain cart types...
+        val blo = (bankNumber and 0xFF).toByte()
+        write(byteArrayOf(0x0A, 0x00, 0x01, 0x40, 0x00, blo))
+        read(64)
+    }
+
+    fun dumpRAM(header: CartHeader, bankSize: Int): ByteArray{
+        // I'm not sure what bankSize if for if it's always 8192 (see numBanks)
         val ramBuffer = ArrayList<Byte>()
-        val numBanks: int = header.RAMSize / 8192
+        val numBanks: Int = header.RAMSize / 8192
 
         //for bankNumber in range(0,(int(RAMsize/8192))):
         for(bankNumber in 0..numBanks){
@@ -109,33 +113,35 @@ class JoeyAPI(private val iface: UsbInterface, private val conn: UsbDeviceConnec
             RAMBankSwitch(bankNumber)
             val numPackets = 8192 / 64
             for(packetNumber in 0..numPackets){
-                val addHi = RAMaddress shr 8
-                val addLo = RAMaddress and 0xFF
+                val addHi = (ramAddress shr 8).toByte()
+                val addLo = (ramAddress and 0xFF).toByte()
                 write(byteArrayOf(0x11, 0x00, 0x00, addHi, addLo))
                 val result = read(64)
                 ramAddress += 64
-                ramBuffer.addAll(result)
+                ramBuffer.addAll(result.toList())
             }
         }
         return ramBuffer.toByteArray()
     }
 
-    fun burnRAM(ramData: byteArray, bankSize: int){
+    fun burnRAM(header: CartHeader, ramData: ByteArray, bankSize: Int){
         // note: seems bankSize does nothing and all bank sizes are hardcoaded to 8192????
-        val numBanks = RAMsize / 8192
+        val numBanks: Int = header.RAMSize / 8192
         var rPos = 0
 
-        for (bankNumber: 0..numBanks):
+        for (bankNumber in 0..numBanks) {
             var ramAddress = 0xA000
             RAMBankSwitch(bankNumber)
-            for(packetNumber in 0..128):
-                val AddHi = ramAddress shr 8
-                val AddLo = ramAddress and 0xFF
-                write(byteArrayOf(0x12,0x00,0x00,AddHi,AddLo))
+            for (packetNumber in 0..128) {
+                val AddHi = (ramAddress shr 8).toByte()
+                val AddLo = (ramAddress and 0xFF).toByte()
+                write(byteArrayOf(0x12, 0x00, 0x00, AddHi, AddLo))
                 read(64)
-                write(ramData.slice(rPos, rPos+64))
+                write(ramData.sliceArray(rPos..rPos + 64))
                 read(64)
                 ramAddress += 64
-                Rpos += 64
+                rPos += 64
+            }
+        }
     }
 }
