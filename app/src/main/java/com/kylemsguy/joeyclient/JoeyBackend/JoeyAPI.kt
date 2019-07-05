@@ -11,7 +11,7 @@ class JoeyAPI(private val iface: UsbInterface, private val conn: UsbDeviceConnec
 //    val readEndpoint: UsbEndpoint? = iface.getEndpoint(0x81)
 //    val writeEndpoint: UsbEndpoint? = iface.getEndpoint(0x01)
     val readEndpoint: UsbEndpoint? = iface.getEndpoint(0)
-    val writeEndpoint: UsbEndpoint? = iface.getEndpoint(0)
+    val writeEndpoint: UsbEndpoint? = iface.getEndpoint(1)
 
     val RAMTypes = intArrayOf(0,2048,8192,32768,(32768*4),(32768*2))
 
