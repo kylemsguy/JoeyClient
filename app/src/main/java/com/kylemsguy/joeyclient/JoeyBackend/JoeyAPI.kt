@@ -109,13 +109,16 @@ class JoeyAPI(private val iface: UsbInterface, private val conn: UsbDeviceConnec
         val ramBuffer = ArrayList<Byte>()
         val numBanks: Int = header.RAMSize / 8192
 
+        kotlin.io.println("RAM size " + header.RAMSize.toString())
+        kotlin.io.println("number of banks " + numBanks.toString())
+
         //for bankNumber in range(0,(int(RAMsize/8192))):
-        for(bankNumber in 0..numBanks){
+        for(bankNumber in 0 until numBanks){
             kotlin.io.println("bank number " + bankNumber.toString())
             var ramAddress = 0xA000
             RAMBankSwitch(bankNumber)
             val numPackets = 8192 / 64
-            for(packetNumber in 0..numPackets){
+            for(packetNumber in 0 until numPackets){
                 kotlin.io.println("packet number " + packetNumber.toString())
                 val addHi = (ramAddress shr 8).toByte()
                 val addLo = (ramAddress and 0xFF).toByte()
@@ -125,6 +128,7 @@ class JoeyAPI(private val iface: UsbInterface, private val conn: UsbDeviceConnec
                 ramBuffer.addAll(result.toList())
             }
         }
+        kotlin.io.println("Number of bytes read: " + ramBuffer.size.toString())
         return ramBuffer.toByteArray()
     }
 
@@ -133,15 +137,15 @@ class JoeyAPI(private val iface: UsbInterface, private val conn: UsbDeviceConnec
         val numBanks: Int = header.RAMSize / 8192
         var rPos = 0
 
-        for (bankNumber in 0..numBanks) {
+        for (bankNumber in 0 until numBanks) {
             var ramAddress = 0xA000
             RAMBankSwitch(bankNumber)
-            for (packetNumber in 0..128) {
+            for (packetNumber in 0 until 128) {
                 val AddHi = (ramAddress shr 8).toByte()
                 val AddLo = (ramAddress and 0xFF).toByte()
                 write(byteArrayOf(0x12, 0x00, 0x00, AddHi, AddLo))
                 read(64)
-                write(ramData.sliceArray(rPos..rPos + 64))
+                write(ramData.sliceArray(rPos until rPos + 64))
                 read(64)
                 ramAddress += 64
                 rPos += 64
