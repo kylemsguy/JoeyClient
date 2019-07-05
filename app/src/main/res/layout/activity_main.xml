@@ -7,15 +7,20 @@
         android:layout_height="match_parent"
         tools:context=".MainActivity">
 
-    <Button
-            android:text="Refresh"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" android:id="@+id/btnRefresh" tools:layout_editor_absoluteY="167dp"
-            tools:layout_editor_absoluteX="161dp"/>
     <TextView
             android:text="JoeyJoebags Detected"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" tools:layout_editor_absoluteY="116dp"
-            tools:layout_editor_absoluteX="132dp" android:id="@+id/textView"/>
+            tools:layout_editor_absoluteX="132dp" android:id="@+id/cartDataView"/>
+    <Button
+            android:text="Dump SRAM"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" tools:layout_editor_absoluteY="383dp"
+            tools:layout_editor_absoluteX="152dp" android:id="@+id/btnDumpSRAM"/>
+    <Button
+            android:text="Burn SRAM"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" tools:layout_editor_absoluteY="441dp"
+            tools:layout_editor_absoluteX="155dp" android:id="@+id/btnBurnSRAM"/>
 
 </android.support.constraint.ConstraintLayout>
