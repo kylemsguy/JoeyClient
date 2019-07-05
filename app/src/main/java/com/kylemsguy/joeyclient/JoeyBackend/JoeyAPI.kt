@@ -8,20 +8,22 @@ import java.lang.Math
 
 class JoeyAPI(private val iface: UsbInterface, private val conn: UsbDeviceConnection){
 
-    val readEndpoint: UsbEndpoint? = iface.getEndpoint(0x81)
-    val writeEndpoint: UsbEndpoint? = iface.getEndpoint(0x01)
+//    val readEndpoint: UsbEndpoint? = iface.getEndpoint(0x81)
+//    val writeEndpoint: UsbEndpoint? = iface.getEndpoint(0x01)
+    val readEndpoint: UsbEndpoint? = iface.getEndpoint(0)
+    val writeEndpoint: UsbEndpoint? = iface.getEndpoint(0)
 
     val RAMTypes = intArrayOf(0,2048,8192,32768,(32768*4),(32768*2))
 
     /* PyUSB-like helpers */
     fun read(size: Int): ByteArray {
         val result = ByteArray(size)
-        conn.bulkTransfer(readEndpoint, result, result.size, 0)
+        conn.bulkTransfer(readEndpoint, result, result.size, 10)
         return result
     }
 
     fun write(cmd: ByteArray){
-        conn.bulkTransfer(writeEndpoint, cmd, cmd.size, 0)
+        conn.bulkTransfer(writeEndpoint, cmd, cmd.size, 10)
     }
 
     /* Ported functions from JoeyJoebags v3.36Beta */
@@ -109,10 +111,12 @@ class JoeyAPI(private val iface: UsbInterface, private val conn: UsbDeviceConnec
 
         //for bankNumber in range(0,(int(RAMsize/8192))):
         for(bankNumber in 0..numBanks){
+            kotlin.io.println("bank number " + bankNumber.toString())
             var ramAddress = 0xA000
             RAMBankSwitch(bankNumber)
             val numPackets = 8192 / 64
             for(packetNumber in 0..numPackets){
+                kotlin.io.println("packet number " + packetNumber.toString())
                 val addHi = (ramAddress shr 8).toByte()
                 val addLo = (ramAddress and 0xFF).toByte()
                 write(byteArrayOf(0x11, 0x00, 0x00, addHi, addLo))
