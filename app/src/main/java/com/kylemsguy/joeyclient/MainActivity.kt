@@ -76,6 +76,7 @@ class MainActivity : AppCompatActivity() {
             manager?.openDevice(device)?.apply{
                 claimInterface(intf, true)
                 if(intf is UsbInterface) {
+                    kotlin.io.println(intf.endpointCount)
                     val joeyAPI = JoeyAPI(intf, this)
                     val sram: ByteArray = joeyAPI.MBCDumpRAM()
 //                    val file = File(Environment.getExternalStoragePublicDirectory(
