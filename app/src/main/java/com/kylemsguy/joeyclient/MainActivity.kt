@@ -3,6 +3,7 @@ package com.kylemsguy.joeyclient
 import android.Manifest
 import android.app.PendingIntent.getActivity
 import android.content.Context
+import android.content.DialogInterface
 import android.content.pm.PackageManager
 import android.hardware.usb.UsbDevice
 import android.hardware.usb.UsbInterface
@@ -13,6 +14,7 @@ import android.os.Build
 import android.os.Environment
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
+import android.support.v7.app.AlertDialog
 import android.view.View
 import android.widget.Button
 import com.kylemsguy.joeyclient.joeybackend.JoeyAPI
@@ -38,7 +40,23 @@ class MainActivity : AppCompatActivity() {
         }
 
         manager = getSystemService(Context.USB_SERVICE) as UsbManager
-        device = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE) as UsbDevice
+        device = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE) as? UsbDevice
+
+        if(device == null){
+            val builder = AlertDialog.Builder(this)
+            builder.apply{
+                setMessage("Error detecting Joey Joebags. Please unplug and replug the device and try again.")
+                setPositiveButton("Ok") { dialog, id ->
+                    // User clicked OK button
+                    finishAffinity()
+                }
+                setOnCancelListener {
+                    // User clicked OK button
+                    finishAffinity()
+                }
+                show()
+            }
+        }
 
         readSRAMButton = findViewById<Button>(R.id.btnDumpSRAM)
         writeSRAMButton = findViewById<Button>(R.id.btnBurnSRAM)
