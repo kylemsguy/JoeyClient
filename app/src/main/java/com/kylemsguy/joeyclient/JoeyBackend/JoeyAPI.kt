@@ -75,10 +75,10 @@ class JoeyAPI(private val iface: UsbInterface, private val conn: UsbDeviceConnec
 
     fun setBank(blk: Byte, sublk: Byte): ByteArray {
         // TODO: Figure out what this actually does
+        // Lock cart before writing
         val sublk = sublk * 64
         val cmd = byteArrayOf(0x0A, 0x00, 0x03, 0x70, 0x00, sublk.toByte(), 0x70, 0x01, 0xE0.toByte(), 0x70, 0x02, blk)
 //    print (hex(blk),hex(sublk))
-
         write(cmd) // Lock flash block(?)
         return read(64)
     }

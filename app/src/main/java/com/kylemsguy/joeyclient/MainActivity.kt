@@ -4,12 +4,14 @@ import android.Manifest
 import android.app.PendingIntent.getActivity
 import android.content.Context
 import android.content.DialogInterface
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.hardware.usb.UsbDevice
 import android.hardware.usb.UsbInterface
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.hardware.usb.UsbManager
+import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.support.v4.app.ActivityCompat
@@ -108,5 +110,41 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun writeSRAMClicked(view: View){
+        val intent = Intent()
+            .setType("*/")
+            .setAction(Intent.ACTION_GET_CONTENT)
+        startActivityForResult(Intent.createChooser(intent, "Select a .sav file"), 111)
+    }
+
+    fun doWriteSRAM(fileUri: Uri){
+        device?.getInterface(0).also {intf ->
+            manager?.openDevice(device)?.apply{
+                claimInterface(intf, true)
+                if(intf is UsbInterface) {
+                    kotlin.io.println(intf.endpointCount)
+                    val joeyAPI = JoeyAPI(intf, this)
+                    val file = File(fileUri.path)
+                    val sram = file.readBytes()
+                    joeyAPI.MBCBurnRAM(sram)
+                }
+            }
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == 111 && resultCode == RESULT_OK) {
+            val selectedFile = data?.data
+            if(selectedFile == null){
+                val builder : AlertDialog.Builder? = this.let {
+                    AlertDialog.Builder(it)
+                }
+                builder?.setMessage("SAV file load cancelled")
+                builder?.create()
+            } else {
+                // TODO: add confirmation dialog
+                doWriteSRAM(selectedFile)
+            }
+        }
     }
 }
