@@ -11,51 +11,78 @@
             android:id="@+id/btnBurnROM"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="155dp"
-            android:layout_marginEnd="153dp"
-            android:layout_marginBottom="388dp"
+            android:layout_marginStart="63dp"
             android:text="Burn ROM"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="1.0"
-            app:layout_constraintStart_toStartOf="parent" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/btnDumpROM" />
 
     <Button
             android:id="@+id/btnDumpROM"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="152dp"
-            android:layout_marginEnd="153dp"
-            android:layout_marginBottom="156dp"
+            android:layout_marginStart="63dp"
+            android:layout_marginTop="28dp"
+            android:layout_marginEnd="76dp"
             android:text="Dump ROM"
-            app:layout_constraintBottom_toTopOf="@+id/btnBurnSRAM"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="1.0"
-            app:layout_constraintStart_toStartOf="parent" />
+            app:layout_constraintEnd_toStartOf="@+id/btnDumpSRAM"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/btnReadCartHeader" />
 
     <TextView
-            android:text="JoeyJoebags Detected"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
             android:id="@+id/cartDataView"
-            app:layout_constraintTop_toTopOf="parent" android:layout_marginTop="116dp"
-            app:layout_constraintStart_toStartOf="parent" android:layout_marginStart="132dp"
-            app:layout_constraintEnd_toEndOf="parent" android:layout_marginEnd="133dp"/>
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="132dp"
+            android:layout_marginTop="88dp"
+            android:text="JoeyJoebags Detected"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
     <Button
+            android:id="@+id/btnDumpSRAM"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="28dp"
+            android:layout_marginEnd="68dp"
             android:text="Dump SRAM"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/btnDumpSRAM" app:layout_constraintStart_toStartOf="parent"
-            android:layout_marginStart="152dp" app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginEnd="153dp" android:layout_marginBottom="11dp"
-            app:layout_constraintBottom_toTopOf="@+id/btnBurnSRAM"/>
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/btnReadCartHeader" />
+
     <Button
-            android:text="Burn SRAM"
+            android:id="@+id/btnBurnSRAM"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/btnBurnSRAM" app:layout_constraintStart_toStartOf="parent"
-            android:layout_marginStart="155dp" app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginEnd="153dp" android:layout_marginBottom="242dp"
-            app:layout_constraintBottom_toBottomOf="parent"/>
+            android:layout_marginStart="82dp"
+            android:layout_marginEnd="68dp"
+            android:text="Burn SRAM"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/btnBurnROM"
+            app:layout_constraintTop_toBottomOf="@+id/btnDumpSRAM" />
+
+    <TextView
+            android:id="@+id/textCartHeader"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="50dp"
+            android:text='Click "Read Cart Header"'
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/btnBurnROM" />
+
+    <Button
+            android:id="@+id/btnReadCartHeader"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="166dp"
+            android:layout_marginTop="51dp"
+            android:layout_marginEnd="157dp"
+            android:layout_marginBottom="28dp"
+            android:text="Read Cart Header"
+            app:layout_constraintBottom_toTopOf="@+id/btnDumpSRAM"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/cartDataView" />
 
 </android.support.constraint.ConstraintLayout>

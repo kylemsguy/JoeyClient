@@ -3,32 +3,44 @@ package com.kylemsguy.joeyclient
 import android.Manifest
 import android.app.PendingIntent.getActivity
 import android.content.Context
-import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.hardware.usb.UsbDevice
 import android.hardware.usb.UsbInterface
-import android.support.v7.app.AppCompatActivity
-import android.os.Bundle
 import android.hardware.usb.UsbManager
 import android.net.Uri
 import android.os.Build
+import android.os.Bundle
 import android.os.Environment
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AlertDialog
+import android.support.v7.app.AppCompatActivity
 import android.view.View
 import android.widget.Button
+import android.widget.TextView
+import android.widget.Toast
 import com.kylemsguy.joeyclient.joeybackend.JoeyAPI
+import org.w3c.dom.Text
 import java.io.File
+
 
 class MainActivity : AppCompatActivity() {
 
     var manager: UsbManager? = null
     var device: UsbDevice? = null
 
+    var textCartHeader: TextView? = null
+
+    var btnGetCartInfo: Button? = null
+
+    var readROMButton: Button? = null
+    var writeROMButton: Button? = null
+
     var readSRAMButton: Button? = null
     var writeSRAMButton: Button? = null
+
+    val debugDisablePathSelect = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,15 +72,38 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        textCartHeader = findViewById<TextView>(R.id.textCartHeader)
+
+        btnGetCartInfo = findViewById<Button>(R.id.btnReadCartHeader)
+
+        readROMButton = findViewById<Button>(R.id.btnDumpROM)
+        writeROMButton = findViewById<Button>(R.id.btnBurnROM)
+
         readSRAMButton = findViewById<Button>(R.id.btnDumpSRAM)
         writeSRAMButton = findViewById<Button>(R.id.btnBurnSRAM)
+
+        btnGetCartInfo?.let { button ->
+            button.setOnClickListener {
+                readCartHead(it)
+            }
+        }
+
+        readROMButton?.let { button ->
+            button.setOnClickListener {
+                readROMClicked(it)
+            }
+        }
+        writeROMButton?.let { button ->
+            button.setOnClickListener {
+                writeROMClicked(it)
+            }
+        }
 
         readSRAMButton?.let { button ->
             button.setOnClickListener {
                 readSRAMClicked(it)
             }
         }
-
         writeSRAMButton?.let { button ->
             button.setOnClickListener {
                 writeSRAMClicked(it)
@@ -87,11 +122,74 @@ class MainActivity : AppCompatActivity() {
                 setOf(Environment.MEDIA_MOUNTED, Environment.MEDIA_MOUNTED_READ_ONLY)
     }
 
+    fun readCartHead(view: View){
+        // TODO: Call readCartHead and display on screen
+        device?.getInterface(0).also { intf ->
+            manager?.openDevice(device)?.apply {
+                claimInterface(intf, true)
+                if (intf is UsbInterface) {
+                    kotlin.io.println(intf.endpointCount)
+                    val joeyAPI = JoeyAPI(intf, this)
+                    val header = joeyAPI.readCartHeader()
+
+                    textCartHeader?.text = header.toString()
+                }
+            }
+        }
+    }
+
+    fun readROMClicked(view: View){
+        kotlin.io.println(device?.interfaceCount)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            kotlin.io.println(device?.manufacturerName)
+        }
+        kotlin.io.println(device?.productId)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            kotlin.io.println(device?.productName)
+        }
+        device?.getInterface(0).also {intf ->
+            manager?.openDevice(device)?.apply{
+                claimInterface(intf, true)
+                if(intf is UsbInterface) {
+                    kotlin.io.println(intf.endpointCount)
+                    val joeyAPI = JoeyAPI(intf, this)
+                    val rom: ByteArray = joeyAPI.MBCDumpROM()
+//                    val file = File(Environment.getExternalStoragePublicDirectory(
+//                        Environment.DIRECTORY_DOCUMENTS), "JoeyClient")
+                    // TODO convert to file selector
+                    // TODO make async
+                    val file = File(getExternalFilesDir(null), "rom.gb")
+                    file.writeBytes(rom)
+                }
+            }
+        }
+
+        val builder : AlertDialog.Builder? = this.let {
+            AlertDialog.Builder(it)
+        }
+        builder?.setMessage("Read ROM Complete!")
+        builder?.create()
+
+//        Toast.makeText(
+//            this, "Read ROM Complete!",
+//            Toast.LENGTH_SHORT
+//        ).show()
+
+    }
+
+    fun writeROMClicked(view: View){
+
+    }
+
     fun readSRAMClicked(view: View){
         kotlin.io.println(device?.interfaceCount)
-        kotlin.io.println(device?.manufacturerName)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            kotlin.io.println(device?.manufacturerName)
+        }
         kotlin.io.println(device?.productId)
-        kotlin.io.println(device?.productName)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            kotlin.io.println(device?.productName)
+        }
         device?.getInterface(0).also {intf ->
             manager?.openDevice(device)?.apply{
                 claimInterface(intf, true)
@@ -101,15 +199,25 @@ class MainActivity : AppCompatActivity() {
                     val sram: ByteArray = joeyAPI.MBCDumpRAM()
 //                    val file = File(Environment.getExternalStoragePublicDirectory(
 //                        Environment.DIRECTORY_DOCUMENTS), "JoeyClient")
+                    // TODO convert to file selector
                     val file = File(getExternalFilesDir(null), "sram.sav")
                     file.writeBytes(sram)
                 }
             }
         }
-
     }
 
     fun writeSRAMClicked(view: View){
+        Toast.makeText(
+            this, "Write SRAM button Clicked",
+            Toast.LENGTH_SHORT
+        ).show()
+        if(debugDisablePathSelect) {
+            val file = File(getExternalFilesDir(null), "sram.sav")
+            val fileURI = Uri.parse(file.toURI().toString())
+            doWriteSRAM(fileURI)
+            return
+        }
         val intent = Intent()
             .setType("*/")
             .setAction(Intent.ACTION_GET_CONTENT)
@@ -143,6 +251,7 @@ class MainActivity : AppCompatActivity() {
                 builder?.create()
             } else {
                 // TODO: add confirmation dialog
+                kotlin.io.println("SAV file loaded" + selectedFile.encodedPath)
                 doWriteSRAM(selectedFile)
             }
         }
