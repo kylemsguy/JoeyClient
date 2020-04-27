@@ -27,6 +27,12 @@ class JoeyAPI(private val iface: UsbInterface, private val conn: UsbDeviceConnec
     }
 
     /* Ported functions from JoeyJoebags v3.36Beta */
+    fun MBCDumpROM(): ByteArray{
+        val bankSize = 16384
+        val header = readCartHeader()
+        return dumpROM(header, bankSize)
+    }
+
     fun MBCDumpRAM(): ByteArray{
         val bankSize = 16384
         val header = readCartHeader()
@@ -75,10 +81,10 @@ class JoeyAPI(private val iface: UsbInterface, private val conn: UsbDeviceConnec
 
     fun setBank(blk: Byte, sublk: Byte): ByteArray {
         // TODO: Figure out what this actually does
+        // Lock cart before writing
         val sublk = sublk * 64
         val cmd = byteArrayOf(0x0A, 0x00, 0x03, 0x70, 0x00, sublk.toByte(), 0x70, 0x01, 0xE0.toByte(), 0x70, 0x02, blk)
 //    print (hex(blk),hex(sublk))
-
         write(cmd) // Lock flash block(?)
         return read(64)
     }
@@ -93,6 +99,38 @@ class JoeyAPI(private val iface: UsbInterface, private val conn: UsbDeviceConnec
         read(64) // Do I even need to store this???
         write(byteArrayOf(0x0A,0x00,0x01,0x21,0x00,blo))
         read(64)
+    }
+
+    fun dumpROM(header: CartHeader, bankSize: Int): ByteArray{
+        // main_dumpROM
+        val romBuffer = ArrayList<Byte>()
+        val numBanks: Int = header.ROMSize / bankSize
+        var romAddress: Int
+
+        kotlin.io.println("ROM size " + header.ROMSize.toString())
+        kotlin.io.println("number of banks " + numBanks.toString())
+
+        for(bankNumber in 0 until numBanks){
+            kotlin.io.println("bank number " + bankNumber.toString())
+            if (bankNumber == 0){
+                romAddress = 0 // get bank 0 from address 0, not setbank(0) and get from high bank...
+            } else {
+                romAddress = bankSize
+            }
+            ROMBankSwitch(bankNumber) // switch to new bank.
+            val numPackets = bankSize / 64
+            for(packetNumber in 0 until numPackets){
+                kotlin.io.println("packet number " + packetNumber.toString())
+                val addHi = (romAddress shr 8).toByte()
+                val addLo = (romAddress and 0xFF).toByte()
+                write(byteArrayOf(0x10, 0x00, 0x00, addHi, addLo))
+                val result = read(64)
+                romAddress += 64
+                romBuffer.addAll(result.toList())
+            }
+        }
+        kotlin.io.println("Number of bytes read: " + romBuffer.size.toString())
+        return romBuffer.toByteArray()
     }
 
     fun RAMBankSwitch(bankNumber: Int){
